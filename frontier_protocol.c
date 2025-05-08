@@ -49,8 +49,7 @@ struct statestruct
   char *buff;
  };
 
-//changed char *connectstr to const char *connectstr
-int frontierretrieve(void **state,unsigned long *statelong,const char *connectstr,char *query,char **buff) //rename main to frontierretrieve
+int frontierretrieve(void **state,unsigned long *statelong,const char *connectstr,char *query,char **buff)
  {
   int ec,c,i;
   unsigned long channel;
@@ -58,40 +57,8 @@ int frontierretrieve(void **state,unsigned long *statelong,const char *connectst
   int ziplevel=0;
   char zipstr[5];
   FrontierConfig *config;
-  //const char *connectstr="";//changing to const char isntead of char
 
-
-//  while(1)
-//   {
-//    c=getopt(argc,argv,":c:rR");
-//    switch(c)
-//     {
-//      case 'c':
-//        connectstr=optarg;
-//        break;
-//      case 'r':
-//        ttl=1;
-//        break;
-//      case 'R':
-//        ttl=3;
-//        break;
-//      case -1:
-//        break;
-//      case ':':
-//        fprintf(stderr,"Missing argument\n");
-//        usage();
-//      default:
-//        fprintf(stderr,"Unrecognized option\n");
-//        usage();
-//     }
-//   if(c==-1)
-//      break;
-//   }
-//  if(optind>=argc)
-//   {
-//    fprintf(stderr,"No files requested\n");
-//    usage();
-//   }
+  
   /* default zip level to 0, unlike ordinary frontier client */
   if(getenv("FRONTIER_RETRIEVEZIPLEVEL")==0)
     putenv("FRONTIER_RETRIEVEZIPLEVEL=0");
@@ -139,7 +106,7 @@ int frontierretrieve(void **state,unsigned long *statelong,const char *connectst
   int n;
   char *p;
   char *localname;
-  char *encodedquery;//changed argv to query
+  char *encodedquery;
 
   encodedquery=doubleurlencode(query);
   uribuf=malloc(strlen(encodedquery)+128);
@@ -149,52 +116,48 @@ int frontierretrieve(void **state,unsigned long *statelong,const char *connectst
   free(uribuf);
   if(ec!=FRONTIER_OK)
    {
-    fprintf(stderr,"Error getting data for %s: %s\n",query[i],frontier_getErrorMsg());
+    fprintf(stderr,"Error getting data for %s: %s\n",query,frontier_getErrorMsg());
    }
   frsb=frontierRSBlob_open(channel,0,1,&ec);
   if(ec!=FRONTIER_OK)
    {
-    fprintf(stderr,"Error opening result blob for %s: %s\n",query[i],frontier_getErrorMsg());
+    fprintf(stderr,"Error opening result blob for %s: %s\n",query,frontier_getErrorMsg());
    }
   bytes=0;
-  size_t arraysize = 16;                                    //Initialize ptr array size
+  size_t arraysize = 16;                                    //Initialize size of ptr arrays
   size_t blocknumber = 0;                                   //Data blocks allocated
   size_t totalsize = 0;                                     //Size of combined data blocks
   size_t *ptrsizearray = malloc(arraysize*sizeof(size_t));  //Array for the data block sizes
   char **ptrarray = malloc(arraysize*sizeof(char *));       //Array for data block pointers
-  if (ptrarray == NULL || ptrsizearray == NULL)
-     {
-      fprintf(stderr, "Memory Allocation Failed.\n");
-     }
   while(1)
    {
     char resulttype=frontierRSBlob_getByte(frsb,&ec);
     if(ec!=FRONTIER_OK)
      {
-      fprintf(stderr,"Error getting result type for %s: %s\n",query[i],frontier_getErrorMsg());
+      fprintf(stderr,"Error getting result type for %s: %s\n",query,frontier_getErrorMsg());
       break;
      }
     if(resulttype==RESULT_TYPE_EOR)
       break;
     if(resulttype!=RESULT_TYPE_ARRAY)
      {
-      fprintf(stderr,"Unexpected result type for %s: %d\n",query[i],resulttype);
+      fprintf(stderr,"Unexpected result type for %s: %d\n",query,resulttype);
       ec=!FRONTIER_OK;
       break;
      }
     n=frontierRSBlob_getInt(frsb,&ec);
     if(ec!=FRONTIER_OK)
      {
-      fprintf(stderr,"Error getting result size for %s: %s\n",query[i],frontier_getErrorMsg());
+      fprintf(stderr,"Error getting result size for %s: %s\n",query,frontier_getErrorMsg());
       break;
      }
     p=frontierRSBlob_getByteArray(frsb,n,&ec);
     if(ec!=FRONTIER_OK)
      {
-      fprintf(stderr,"Error getting result data for %s: %s\n",query[i],frontier_getErrorMsg());
+      fprintf(stderr,"Error getting result data for %s: %s\n",query,frontier_getErrorMsg());
       break;
      }
-    if (blocknumber == arraysize)                           //Increase ptr array size
+    if (blocknumber == arraysize)                           //Increase ptr array size as needed
      {
       arraysize += 16;
       ptrarray = realloc(ptrarray, arraysize*sizeof(void *));
@@ -204,10 +167,10 @@ int frontierretrieve(void **state,unsigned long *statelong,const char *connectst
      {
       fprintf(stderr, "Memory Reallocation Failed.\n");
      }
-    ptrsizearray[blocknumber] = n;                          //Insert size into array
+    ptrsizearray[blocknumber] = n;                          //Insert current size ptr into array
     char *tmpbuff=malloc(n);
     memcpy(tmpbuff,p,n);
-    ptrarray[blocknumber] = tmpbuff;                        //Insert data block ptr into array
+    ptrarray[blocknumber] = tmpbuff;                        //Insert current ptr into array
     totalsize+=n;                                           //Add size of current block to total
     blocknumber++;
    bytes+=n;
@@ -227,6 +190,8 @@ int frontierretrieve(void **state,unsigned long *statelong,const char *connectst
     offset += blocksize;
     free(tmpptr);
    }
+  fprintf(stderr, "Allocated %d bytes\n", totalsize);
+  fprintf(stderr, "Blocks added %d\n", blocknumber);
   *buff=combineddata;
   free(ptrarray);
   free(ptrsizearray);
