@@ -63,7 +63,7 @@ $(SHLIB): $(OBJ) $(UTLOBJ)
 	rm -f $(SHLIB)*
 	#$(CC) -shared -o $(SHLIB) $(ARCH) $(OBJ) -lcurl -lc
 	#$(CC) -shared -Wl,-soname,$(SHLIB).$(MAJOR) -o $(SHLIB).$(VERSION).$(RELEASE) $(OBJ) -lcurl -lc
-	gcc -shared -Wl,-soname,$(SHLIB).so.$(MAJOR) -o $(SHLIB).so.$(VERSION).$(RELEASE) $(OBJ) -lcurl -lc $(LDFLAGS)
+	gcc -shared -Wl,-soname,$(SHLIB).so.$(MAJOR) -o $(SHLIB).so.$(VERSION).$(RELEASE) $(OBJ) -L. -lfrontier_client -lcurl -lc $(LDFLAGS) -lssl -lcrypto
 	ln -sf $(SHLIB).so.$(VERSION).$(RELEASE) $(SHLIB).so.$(MAJOR)
 	ln -sf $(SHLIB).so.$(MAJOR) $(SHLIB).so
 	echo $(VERSION) > VERSION
@@ -82,7 +82,7 @@ test_ifbeam: test_ifbeam.o $(OBJ)
 	gcc -o ifbeam_test test_ifbeam.o $(CXXFLAGS) $(OBJ) -lcurl $(LDFLAGS)
 else
 test_ifbeam: test_ifbeam.o $(OBJ)
-	gcc -o ifbeam_test test_ifbeam.o $(CXXFLAGS) $(OBJ) -L. -lfrontier_client -lcurl $(LDFLAGS) -lssl -lcrypto
-	gcc -o test_icarus_con test_icarus_con.c $(CXXFLAGS) $(OBJ) -L. -lfrontier_client -lcurl $(LDFLAGS) -lssl -lcrypto
+	gcc -o ifbeam_test test_ifbeam.o -fPIC -g -03  -I../../fife_wda/ -I. -L. -lwda -lcurl
+	gcc -o test_icarus_con test_icarus_con.c -fPIC -g -03  -I../../fife_wda/ -I. -L. -lwda -lcurl
 endif
 
