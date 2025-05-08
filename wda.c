@@ -579,7 +579,6 @@ static HttpResponse get_csv_file(const char *url, int *status)
 
 /*
  * Internal common function
- * Recognizes Frontier requirement
  */
 static HttpResponse get_response(const char *url, const char *headers[], size_t nheaders, int timeout, int *status)
 {
@@ -602,7 +601,7 @@ static HttpResponse get_response(const char *url, const char *headers[], size_t 
     }
 }
 
-//URL Parsing for Frontier
+//URL-Query Parsing for Frontier
 static void url_parser(const char *url, char *dburl, char *query)
 {
 
